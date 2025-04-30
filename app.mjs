@@ -91,7 +91,6 @@
 
 // startServer();
 
-
 import express from 'express';
 import cors from 'cors';
 import userRoutes from './routes/userRoutes.js';
@@ -106,32 +105,33 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enhanced CORS configuration
+// Dynamic CORS configuration
+const whitelist = [
+  'https://frontendui-qw57.onrender.com',
+  'http://localhost:3000'
+];
+
 const corsOptions = {
-  origin: [
-    'https://frontendui-qw57.onrender.com', // Your frontend URL
-    'http://localhost:3000', // For local development
-  ],
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
+    'Content-Type',
+    'Authorization',
     'X-Requested-With',
-    'Accept',
-    'Origin',
-    'Access-Control-Allow-Headers',
-    'Access-Control-Request-Headers',
-    'Access-Control-Allow-Origin'
+    'Accept'
   ],
-  optionsSuccessStatus: 200 
+  optionsSuccessStatus: 200
 };
 
-// Apply CORS middleware
+// Apply CORS middleware only once
 app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
 
 // Request logging
 app.use(morgan('dev'));
@@ -139,18 +139,6 @@ app.use(morgan('dev'));
 // Body parsing middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// Custom headers middleware
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', corsOptions.origin);
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-  );
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  next();
-});
 
 // Routes
 app.use('/api/auth', userRoutes);
@@ -170,6 +158,9 @@ app.get('/api/health', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ error: 'CORS error', message: err.message });
+  }
   res.status(500).json({ 
     error: 'Something went wrong!',
     message: err.message 
