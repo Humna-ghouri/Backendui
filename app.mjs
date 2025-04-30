@@ -166,7 +166,7 @@ const startServer = async () => {
 
     // Enhanced CORS configuration
     app.use(cors({
-      origin: ['http://localhost:5173', 'https://frontend-ui-rose.vercel.app'],
+      origin: ['https://backendui.onrender.com', 'https://frontend-ui-rose.vercel.app'],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
       allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
