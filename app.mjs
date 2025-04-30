@@ -124,7 +124,7 @@ const corsOptions = {
     'Access-Control-Request-Headers',
     'Access-Control-Allow-Origin'
   ],
-  optionsSuccessStatus: 200 // For legacy browser support
+  optionsSuccessStatus: 200 
 };
 
 // Apply CORS middleware
