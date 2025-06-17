@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { User } from '../models/User.js';
+import User from '../models/User.js';
 import { sendWelcomeEmail } from '../utils/emailSender.js';
 
 export const signup = async (req, res) => {
@@ -135,7 +135,7 @@ export const signin = async (req, res) => {
   }
 };
 
-export const getUser = async (req, res) => {
+export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
     if (!user) {

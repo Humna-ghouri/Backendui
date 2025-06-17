@@ -1,151 +1,122 @@
-import { User } from '../models/User.js';
-
-// Enhanced logging helper
-const logTodoAction = (action, userId, todoId = null, additionalData = {}) => {
-  console.log('📝 Todo Action:', {
-    timestamp: new Date().toISOString(),
-    action,
-    userId,
-    todoId,
-    ...additionalData
-  });
-};
-
-export const getTodos = async (req, res) => {
+import Todo from '../models/Todo.js';
+export const getAllTodos = async (req, res) => {
   try {
-    const startTime = Date.now();
-    const user = await User.findById(req.user._id).lean();
-    
-    if (!user) {
-      logTodoAction('get_todos_failed', req.user._id, null, { error: 'User not found' });
-      return res.status(404).json({ 
-        success: false,
-        message: 'User not found' 
-      });
-    }
-    
-    logTodoAction('get_todos_success', req.user._id, null, {
-      count: user.todos.length,
-      duration: Date.now() - startTime
-    });
-    
-    res.json({
+    const todos = await Todo.find()
+      .populate('user', 'name email') // Include user details
+      .sort({ createdAt: -1 }); // Newest first
+
+    res.status(200).json({
       success: true,
-      count: user.todos.length,
-      todos: user.todos
+      count: todos.length,
+      todos
     });
   } catch (error) {
-    logTodoAction('get_todos_error', req.user._id, null, { error: error.message });
-    res.status(500).json({ 
+    console.error('Error fetching todos:', error);
+    res.status(500).json({
       success: false,
-      message: 'Failed to fetch todos',
-      error: error.message 
+      message: 'Server error fetching todos'
     });
   }
 };
 
-export const addTodo = async (req, res) => {
+// ✅ Create new todo
+export const createTodo = async (req, res) => {
   try {
-    const startTime = Date.now();
-    const { title, description } = req.body;
+    const { title, description, priority, dueDate } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ success: false, message: 'Title is required' });
+    }
+
+    const newTodo = new Todo({
+      title,
+      description,
+      priority,
+      dueDate,
+      user: req.user._id  // ✅ use _id here
+    });
+
+    await newTodo.save();
+
+    res.status(201).json({ success: true, message: 'Task created successfully', todo: newTodo });
+  } catch (err) {
+    console.error('Create Todo Error:', err);
+    res.status(500).json({ success: false, message: 'Server error while creating task' });
+  }
+};
+// ✅ Get all todos
+export const getTodos = async (req, res) => {
+  try {
+    const todos = await Todo.find().sort({ createdAt: -1 });
+    res.status(200).json(todos);
+  } catch (error) {
+    console.error('Get Todos Error:', error);
+    res.status(500).json({ message: 'Failed to get todos' });
+  }
+};
+
+// ✅ Get single todo by ID
+export const getTodoById = async (req, res) => {
+  try {
+    const todo = await Todo.findById(req.params.id);
+    if (!todo) return res.status(404).json({ message: 'Todo not found' });
+    res.status(200).json(todo);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching todo' });
+  }
+};
+
+// Update the updateTodo function:
+export const updateTodo = async (req, res) => {
+  try {
+    const { title, description, status, priority, dueDate } = req.body;
     
     if (!title) {
-      logTodoAction('add_todo_validation_failed', req.user._id, null, { error: 'Title is required' });
       return res.status(400).json({ 
-        success: false,
+        success: false, 
         message: 'Title is required' 
       });
     }
 
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      logTodoAction('add_todo_user_not_found', req.user._id, null, { error: 'User not found' });
+    const updated = await Todo.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      {
+        title: title.trim(),
+        description: description?.trim() || '',
+        status,
+        priority,
+        dueDate
+      },
+      { 
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!updated) {
       return res.status(404).json({ 
-        success: false,
-        message: 'User not found' 
-      });
-    }
-
-    const newTodo = { 
-      title, 
-      description,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      status: 'pending'
-    };
-
-    user.todos.push(newTodo);
-    await user.save();
-
-    const addedTodo = user.todos[user.todos.length - 1];
-    
-    logTodoAction('add_todo_success', req.user._id, addedTodo._id, {
-      title,
-      duration: Date.now() - startTime
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Todo added successfully',
-      todo: addedTodo
-    });
-  } catch (error) {
-    logTodoAction('add_todo_error', req.user._id, null, { error: error.message });
-    res.status(500).json({ 
-      success: false,
-      message: 'Failed to add todo',
-      error: error.message 
-    });
-  }
-};
-
-export const updateTodo = async (req, res) => {
-  try {
-    const startTime = Date.now();
-    const { id } = req.params;
-    const { title, description, completed, status } = req.body;
-
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      logTodoAction('update_todo_user_not_found', req.user._id, id, { error: 'User not found' });
-      return res.status(404).json({ 
-        success: false,
-        message: 'User not found' 
-      });
-    }
-
-    const todo = user.todos.id(id);
-    if (!todo) {
-      logTodoAction('update_todo_not_found', req.user._id, id, { error: 'Todo not found' });
-      return res.status(404).json({ 
-        success: false,
+        success: false, 
         message: 'Todo not found' 
       });
     }
 
-    const updateData = {
-      title: title !== undefined ? title : todo.title,
-      description: description !== undefined ? description : todo.description,
-      completed: completed !== undefined ? completed : todo.completed,
-      status: status !== undefined ? status : todo.status,
-      updatedAt: new Date()
-    };
-
-    todo.set(updateData);
-    await user.save();
-
-    logTodoAction('update_todo_success', req.user._id, id, {
-      changes: updateData,
-      duration: Date.now() - startTime
-    });
-
-    res.json({
+    res.status(200).json({
       success: true,
-      message: 'Todo updated successfully',
-      todo
+      message: 'Task updated successfully',
+      todo: updated
     });
   } catch (error) {
-    logTodoAction('update_todo_error', req.user._id, req.params.id, { error: error.message });
+    console.error('Update Error:', error);
+    
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ 
+        success: false,
+        message: 'Validation error',
+        errors: messages 
+      });
+    }
+    
     res.status(500).json({ 
       success: false,
       message: 'Failed to update todo',
@@ -154,49 +125,17 @@ export const updateTodo = async (req, res) => {
   }
 };
 
+// ✅ Delete todo
 export const deleteTodo = async (req, res) => {
   try {
-    const startTime = Date.now();
-    const { id } = req.params;
-
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      logTodoAction('delete_todo_user_not_found', req.user._id, id, { error: 'User not found' });
-      return res.status(404).json({ 
-        success: false,
-        message: 'User not found' 
-      });
-    }
-
-    // Find the index of the todo to remove
-    const todoIndex = user.todos.findIndex(todo => todo._id.toString() === id);
-    
-    if (todoIndex === -1) {
-      logTodoAction('delete_todo_not_found', req.user._id, id, { error: 'Todo not found' });
-      return res.status(404).json({ 
-        success: false,
-        message: 'Todo not found' 
-      });
-    }
-
-    // Remove the todo from the array using splice
-    user.todos.splice(todoIndex, 1);
-    await user.save();
-
-    logTodoAction('delete_todo_success', req.user._id, id, {
-      duration: Date.now() - startTime
-    });
-
-    res.json({
-      success: true,
-      message: 'Todo deleted successfully'
-    });
+    await Todo.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: 'Todo deleted' });
   } catch (error) {
-    logTodoAction('delete_todo_error', req.user._id, req.params.id, { error: error.message });
-    res.status(500).json({ 
-      success: false,
-      message: 'Failed to delete todo',
-      error: error.message 
-    });
+    console.error('Delete Error:', error);
+    res.status(500).json({ message: 'Failed to delete todo' });
   }
 };
+
+
+
+

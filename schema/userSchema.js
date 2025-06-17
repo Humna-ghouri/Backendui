@@ -1,4 +1,3 @@
-// userSchema.js (Using Joi for validation)
 const Joi = require('joi');
 
 // Schema to validate user input
