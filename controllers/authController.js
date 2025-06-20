@@ -157,3 +157,26 @@ export const getMe = async (req, res) => {
     });
   }
 };
+// Add this new function to authController.js
+export const verifyToken = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+    res.json({ 
+      success: true, 
+      user 
+    });
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to verify token',
+      error: error.message 
+    });
+  }
+};
