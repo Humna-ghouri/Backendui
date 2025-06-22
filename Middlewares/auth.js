@@ -17,21 +17,28 @@
 // };
 
 // export default verifyToken;
+// 
 import jwt from 'jsonwebtoken';
 
 const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
+  const authHeader = req.headers.authorization;
   
-  if (!token) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ 
       success: false, 
-      message: 'Access Denied. No token provided.' 
+      message: 'Authentication token is required' 
     });
   }
 
+  const token = authHeader.split(' ')[1];
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRETKEY);
-    req.user = decoded;
+    req.user = {
+      _id: decoded._id,
+      name: decoded.name,
+      email: decoded.email
+    };
     next();
   } catch (err) {
     console.error('Token verification failed:', err.message);
@@ -39,13 +46,20 @@ const verifyToken = (req, res, next) => {
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({ 
         success: false, 
-        message: 'Token expired. Please log in again.' 
+        message: 'Session expired. Please log in again.' 
       });
     }
     
-    res.status(400).json({ 
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid authentication token' 
+      });
+    }
+    
+    res.status(500).json({ 
       success: false, 
-      message: 'Invalid token' 
+      message: 'Authentication failed' 
     });
   }
 };
