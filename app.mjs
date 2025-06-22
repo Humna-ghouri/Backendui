@@ -108,24 +108,27 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import todoRoutes from './routes/todoRoutes.js';
-import userRoutes from './routes/userRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 dotenv.config();
 
 const app = express();
 
-// CORS Configuration
+// Enhanced CORS Configuration
 const corsOptions = {
   origin: [
     process.env.FRONTEND_URL, 
+    'https://frontendui-qw57.onrender.com',
     'http://localhost:5173'
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
+  credentials: true,
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 app.use(express.json());
 
 // Database Connection
@@ -145,7 +148,7 @@ connectDB();
 
 // Routes
 app.use('/api/todos', todoRoutes);
-app.use('/api/auth', userRoutes);
+app.use('/api/auth', authRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {
