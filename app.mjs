@@ -126,6 +126,8 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200
 };
+console.log("FRONTEND_URL:", process.env.FRONTEND_URL);
+
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
