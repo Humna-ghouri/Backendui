@@ -114,86 +114,61 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Enhanced CORS Configuration
+// Enhanced CORS configuration
+const allowedOrigins = [
+  'https://frontendui-qw57.onrender.com',
+  'http://localhost:5173'
+];
+
 const corsOptions = {
-  origin: [
-    process.env.FRONTEND_URL,
-    'https://frontendui-qw57.onrender.com',
-    'http://localhost:5173'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
   optionsSuccessStatus: 200
 };
 
-console.log("FRONTEND_URL:", process.env.FRONTEND_URL);
-
-// ✅ Apply CORS and JSON middleware
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight requests
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// ✅ Manual CORS headers fix (especially for Render)
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://frontendui-qw57.onrender.com');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-auth-token');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
-
-// ✅ Handle OPTIONS preflight for all routes
-app.options('*', cors(corsOptions));
-
-// ✅ MongoDB Connection
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('MongoDB connected successfully');
-  } catch (err) {
-    console.error('MongoDB connection error:', err.message);
+// Database Connection
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch(err => {
+    console.error('❌ MongoDB Connection Error:', err.message);
     process.exit(1);
-  }
-};
-connectDB();
+  });
 
-// ✅ Routes
+// Routes
 app.use('/api/todos', todoRoutes);
 app.use('/api/auth', userRoutes);
 
-// ✅ Health Check Route
+// Health Check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-    timestamp: new Date().toISOString()
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
   });
 });
 
-// ✅ Error Handler
+// Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: 'Internal Server Error'
+  res.status(500).json({ 
+    success: false, 
+    message: err.message || 'Internal Server Error' 
   });
 });
 
-// ✅ 404 Handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Endpoint not found'
-  });
-});
-
-// ✅ Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Frontend URL: ${process.env.FRONTEND_URL}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
