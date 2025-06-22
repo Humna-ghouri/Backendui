@@ -108,7 +108,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import todoRoutes from './routes/todoRoutes.js';
-import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 dotenv.config();
 
@@ -148,7 +148,7 @@ connectDB();
 
 // Routes
 app.use('/api/todos', todoRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', userRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {
