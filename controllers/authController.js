@@ -219,12 +219,12 @@ export const signup = async (req, res) => {
       expiresIn: '7d',
     });
 
-    // Send welcome email (async - don't wait for it to complete)
+    // Send welcome email (async)
     sendWelcomeEmail(user.name, user.email)
       .catch(err => console.error('Welcome email error:', err));
 
     // Return success response
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Registration successful! Welcome email sent.',
       token,
@@ -239,7 +239,6 @@ export const signup = async (req, res) => {
   } catch (error) {
     console.error('Signup error:', error);
     
-    // Handle specific errors
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         success: false,
@@ -248,7 +247,7 @@ export const signup = async (req, res) => {
       });
     }
     
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       message: 'Registration failed. Please try again.',
       error: error.message 
@@ -295,7 +294,7 @@ export const signin = async (req, res) => {
     user.password = undefined;
 
     // Return success response
-    res.json({
+    return res.json({
       success: true,
       message: 'Login successful',
       token,
@@ -309,7 +308,7 @@ export const signin = async (req, res) => {
 
   } catch (error) {
     console.error('Signin error:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       message: 'Login failed. Please try again.',
       error: error.message 
@@ -326,13 +325,13 @@ export const getMe = async (req, res) => {
         message: 'User not found' 
       });
     }
-    res.json({ 
+    return res.json({ 
       success: true, 
       user 
     });
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       message: 'Failed to fetch user data',
       error: error.message 
@@ -349,13 +348,13 @@ export const verifyToken = async (req, res) => {
         message: 'User not found' 
       });
     }
-    res.json({ 
+    return res.json({ 
       success: true, 
       user 
     });
   } catch (error) {
     console.error('Token verification error:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       message: 'Failed to verify token',
       error: error.message 
