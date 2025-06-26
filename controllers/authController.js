@@ -112,3 +112,24 @@ export const signin = async (req, res) => {
     });
   }
 };
+export const getMe = async (req, res) => {
+  try {
+    const user = req.user; // assuming middleware set this
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      }
+    });
+  } catch (error) {
+    console.error('GetMe error:', error);
+    return res.status(500).json({ success: false, message: 'Something went wrong' });
+  }
+};
