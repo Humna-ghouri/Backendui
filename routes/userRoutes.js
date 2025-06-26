@@ -32,11 +32,11 @@
 
 // export default router;
 import express from 'express';
-import {
-  signup,
-  signin,
-  getMe,
-  verifyToken
+import { 
+  signup, 
+  signin, 
+  getMe, 
+  verifyToken 
 } from '../controllers/authController.js';
 import verifyTokenMiddleware from '../Middlewares/auth.js';
 

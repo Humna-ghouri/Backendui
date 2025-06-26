@@ -312,3 +312,49 @@ export const signin = async (req, res) => {
     });
   }
 };
+
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+    return res.json({ 
+      success: true, 
+      user 
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch user data',
+      error: error.message 
+    });
+  }
+};
+
+export const verifyToken = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+    return res.json({ 
+      success: true, 
+      user 
+    });
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to verify token',
+      error: error.message 
+    });
+  }
+};
