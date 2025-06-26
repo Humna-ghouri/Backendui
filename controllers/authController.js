@@ -201,7 +201,7 @@ export const signup = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Email already registered. Please use a different email.' 
+        message: 'Email already registered' 
       });
     }
 
@@ -223,33 +223,27 @@ export const signup = async (req, res) => {
     sendWelcomeEmail(user.name, user.email)
       .catch(err => console.error('Welcome email error:', err));
 
-    // Return success response
-    return res.status(201).json({
-      success: true,
-      message: 'Registration successful! Welcome email sent.',
-      token,
-      user: { 
-        _id: user._id, 
-        name: user.name, 
-        email: user.email,
-        isAdmin: user.isAdmin 
-      },
-    });
+    // Return success response with proper CORS headers
+    return res.status(201)
+      .header('Access-Control-Allow-Origin', req.headers.origin)
+      .header('Access-Control-Allow-Credentials', 'true')
+      .json({
+        success: true,
+        message: 'Registration successful!',
+        token,
+        user: { 
+          _id: user._id, 
+          name: user.name, 
+          email: user.email,
+          isAdmin: user.isAdmin 
+        },
+      });
 
   } catch (error) {
     console.error('Signup error:', error);
-    
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        error: error.message
-      });
-    }
-    
     return res.status(500).json({ 
       success: false,
-      message: 'Registration failed. Please try again.',
+      message: 'Registration failed',
       error: error.message 
     });
   }
@@ -272,7 +266,7 @@ export const signin = async (req, res) => {
     if (!user) {
       return res.status(401).json({ 
         success: false,
-        message: 'Invalid email or password' 
+        message: 'Invalid credentials' 
       });
     }
 
@@ -281,7 +275,7 @@ export const signin = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ 
         success: false,
-        message: 'Invalid email or password' 
+        message: 'Invalid credentials' 
       });
     }
 
@@ -293,70 +287,27 @@ export const signin = async (req, res) => {
     // Remove password before sending response
     user.password = undefined;
 
-    // Return success response
-    return res.json({
-      success: true,
-      message: 'Login successful',
-      token,
-      user: { 
-        _id: user._id, 
-        name: user.name, 
-        email: user.email,
-        isAdmin: user.isAdmin 
-      },
-    });
+    // Return success response with CORS headers
+    return res
+      .header('Access-Control-Allow-Origin', req.headers.origin)
+      .header('Access-Control-Allow-Credentials', 'true')
+      .json({
+        success: true,
+        message: 'Login successful',
+        token,
+        user: { 
+          _id: user._id, 
+          name: user.name, 
+          email: user.email,
+          isAdmin: user.isAdmin 
+        },
+      });
 
   } catch (error) {
     console.error('Signin error:', error);
     return res.status(500).json({ 
       success: false,
-      message: 'Login failed. Please try again.',
-      error: error.message 
-    });
-  }
-};
-
-export const getMe = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id).select('-password');
-    if (!user) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'User not found' 
-      });
-    }
-    return res.json({ 
-      success: true, 
-      user 
-    });
-  } catch (error) {
-    console.error('Get user error:', error);
-    return res.status(500).json({ 
-      success: false,
-      message: 'Failed to fetch user data',
-      error: error.message 
-    });
-  }
-};
-
-export const verifyToken = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id).select('-password');
-    if (!user) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'User not found' 
-      });
-    }
-    return res.json({ 
-      success: true, 
-      user 
-    });
-  } catch (error) {
-    console.error('Token verification error:', error);
-    return res.status(500).json({ 
-      success: false,
-      message: 'Failed to verify token',
+      message: 'Login failed',
       error: error.message 
     });
   }
