@@ -31,12 +31,29 @@
 // router.get('/api/todos/all', getAllTodos);
 
 // export default router;
+// import express from 'express';
+// import { 
+//   signup, 
+//   signin, 
+//   getMe, 
+//   verifyToken 
+// } from '../controllers/authController.js';
+// import verifyTokenMiddleware from '../Middlewares/auth.js';
+
+// const router = express.Router();
+
+// // Auth routes
+// router.post('/signup', signup);
+// router.post('/signin', signin);
+// router.get('/me', verifyTokenMiddleware, getMe);
+// router.get('/verify', verifyTokenMiddleware, verifyToken);
+
+// export default router;
 import express from 'express';
 import { 
   signup, 
   signin, 
-  getMe, 
-  verifyToken 
+  getMe 
 } from '../controllers/authController.js';
 import verifyTokenMiddleware from '../Middlewares/auth.js';
 
@@ -46,6 +63,8 @@ const router = express.Router();
 router.post('/signup', signup);
 router.post('/signin', signin);
 router.get('/me', verifyTokenMiddleware, getMe);
-router.get('/verify', verifyTokenMiddleware, verifyToken);
+
+// You can re-enable this if you later define verifyToken
+// router.get('/verify', verifyTokenMiddleware, verifyToken);
 
 export default router;

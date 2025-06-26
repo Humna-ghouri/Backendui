@@ -26,7 +26,7 @@ export const signup = async (req, res) => {
       email: email.toLowerCase().trim(),
       password
     });
-    
+
     await user.save();
 
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRETKEY, {
@@ -112,9 +112,10 @@ export const signin = async (req, res) => {
     });
   }
 };
+
 export const getMe = async (req, res) => {
   try {
-    const user = req.user; // assuming middleware set this
+    const user = req.user;
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
