@@ -32,19 +32,20 @@
 
 // export default router;
 import express from 'express';
-import { getAllTodos } from '../controllers/todoController.js';
-import { signup, signin, getMe, verifyToken } from '../controllers/authController.js';
+import {
+  signup,
+  signin,
+  getMe,
+  verifyToken
+} from '../controllers/authController.js';
 import verifyTokenMiddleware from '../Middlewares/auth.js';
 
 const router = express.Router();
 
 // Auth routes
-router.post('/auth/signup', signup);
-router.post('/auth/signin', signin);
-router.get('/auth/me', verifyTokenMiddleware, getMe);
-router.get('/auth/verify', verifyTokenMiddleware, verifyToken);
-
-// Todo routes
-router.get('/todos/all', getAllTodos);
+router.post('/signup', signup);
+router.post('/signin', signin);
+router.get('/me', verifyTokenMiddleware, getMe);
+router.get('/verify', verifyTokenMiddleware, verifyToken);
 
 export default router;

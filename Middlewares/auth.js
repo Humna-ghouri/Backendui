@@ -17,7 +17,6 @@
 // };
 
 // export default verifyToken;
-// 
 import jwt from 'jsonwebtoken';
 
 const verifyToken = (req, res, next) => {
@@ -32,16 +31,13 @@ const verifyToken = (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRETKEY);
-    req.user = {
-      _id: decoded._id,
-      name: decoded.name,
-      email: decoded.email
-    };
-    next();
-  } catch (err) {
-    console.error('Token verification failed:', err.message);
+try {
+  const decoded = jwt.verify(token, process.env.JWT_SECRETKEY);
+  console.log("🔑 Decoded Token:", decoded); // ✅ Add this
+  req.user = { _id: decoded.id };
+  next();
+} catch (err) {
+  console.error('Token verification failed:', err.message);
     
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({ 
@@ -57,7 +53,7 @@ const verifyToken = (req, res, next) => {
       });
     }
     
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false, 
       message: 'Authentication failed' 
     });
