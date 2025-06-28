@@ -2,7 +2,11 @@ import Todo from '../models/Todo.js';
 
 export const getAllTodos = async (req, res) => {
   try {
+<<<<<<< HEAD
     const todos = await Todo.find().populate('user', 'name email'); // Make sure 'Todo' is imported correctly
+=======
+    const todos = await Todo.find(); // Make sure 'Todo' is imported correctly
+>>>>>>> 49f9b3b4d4196c59baace9323a82247a59811bf8
     res.json({ todos });
   } catch (err) {
     console.error('❌ getAllTodos error:', err.message);
