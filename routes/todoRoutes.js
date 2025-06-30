@@ -11,11 +11,11 @@ import {
 
 const router = express.Router();
 
-// ✅ Protect all routes below with verifyToken middleware
-router.use(verifyToken);
-
 // ✅ Admin or general use — Get all todos with user info populated (if needed)
 router.get('/all', getAllTodos);
+
+// ✅ Protect all routes below with verifyToken middleware
+router.use(verifyToken);
 
 // ✅ Create a new todo for the logged-in user
 router.post('/', createTodo);
