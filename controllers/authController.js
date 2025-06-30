@@ -1,58 +1,64 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+
 import { sendWelcomeEmail } from '../utils/emailSender.js';
 
-// SIGNUP
 export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // Validation
     if (!name || !email || !password) {
-      return res.status(400).json({
+      return res.status(400).json({ 
         success: false,
-        message: 'Please provide name, email and password'
+        message: 'Please provide name, email and password' 
       });
     }
 
+    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email already registered'
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email already registered. Please use a different email.' 
       });
     }
 
-    const user = new User({
+    // Create new user
+    const user = new User({ 
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password
     });
-
+    
     await user.save();
 
+    // Generate JWT token
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRETKEY, {
       expiresIn: '7d',
     });
 
-    // Send welcome email (non-blocking)
+    // Send welcome email (async - don't wait for it to complete)
     sendWelcomeEmail(user.name, user.email)
       .catch(err => console.error('Welcome email error:', err));
 
-    return res.status(201).json({
+    // Return success response
+    res.status(201).json({
       success: true,
-      message: 'Registration successful!',
+      message: 'Registration successful! Welcome email sent.',
       token,
-      user: {
-        _id: user._id,
-        name: user.name,
+      user: { 
+        _id: user._id, 
+        name: user.name, 
         email: user.email,
-        isAdmin: user.isAdmin
+        isAdmin: user.isAdmin 
       },
     });
 
   } catch (error) {
     console.error('Signup error:', error);
-
+    
+    // Handle specific errors
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         success: false,
@@ -60,122 +66,215 @@ export const signup = async (req, res) => {
         error: error.message
       });
     }
-
-    return res.status(500).json({
+    
+    res.status(500).json({ 
       success: false,
-      message: 'Registration failed',
-      error: error.message
+      message: 'Registration failed. Please try again.',
+      error: error.message 
     });
   }
 };
 
-// SIGNIN
 export const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validation
     if (!email || !password) {
-      return res.status(400).json({
+      return res.status(400).json({ 
         success: false,
-        message: 'Please provide email and password'
+        message: 'Please provide email and password' 
       });
     }
 
+    // Find user with password
     const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
     if (!user) {
-      return res.status(401).json({
+      return res.status(401).json({ 
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid email or password' 
       });
     }
 
+    // Verify password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({
+      return res.status(401).json({ 
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid email or password' 
       });
     }
 
+    // Generate token
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRETKEY, {
       expiresIn: '7d',
     });
 
+    // Remove password before sending response
     user.password = undefined;
 
-    return res.json({
+    // Return success response
+    res.json({
       success: true,
       message: 'Login successful',
       token,
-      user: {
-        _id: user._id,
-        name: user.name,
+      user: { 
+        _id: user._id, 
+        name: user.name, 
         email: user.email,
-        isAdmin: user.isAdmin
+        isAdmin: user.isAdmin 
       },
     });
 
   } catch (error) {
     console.error('Signin error:', error);
-    return res.status(500).json({
+    res.status(500).json({ 
       success: false,
-      message: 'Login failed',
-      error: error.message
+      message: 'Login failed. Please try again.',
+      error: error.message 
     });
   }
 };
 
-// GET CURRENT USER (for auth middleware)
-export const getMe = async (req, res) => {
-  try {
-    const user = req.user;
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        isAdmin: user.isAdmin
-      }
-    });
-  } catch (error) {
-    console.error('Get user error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch user data',
-      error: error.message
-    });
-  }
-};
-
-// VERIFY TOKEN (used for protected routes)
-export const verifyToken = async (req, res) => {
+export const getUser = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
     if (!user) {
-      return res.status(404).json({
+      return res.status(404).json({ 
         success: false,
-        message: 'User not found'
+        message: 'User not found' 
       });
     }
-
-    return res.json({
-      success: true,
-      user
+    res.json({ 
+      success: true, 
+      user 
     });
   } catch (error) {
-    console.error('Token verification error:', error);
-    return res.status(500).json({
+    console.error('Get user error:', error);
+    res.status(500).json({ 
       success: false,
-      message: 'Failed to verify token',
-      error: error.message
+      message: 'Failed to fetch user data',
+      error: error.message 
     });
   }
 };
+// import jwt from 'jsonwebtoken';
+// import { User } from '../models/User.js';
+
+// export const signup = async (req, res) => {
+//   try {
+//     const { name, email, password } = req.body;
+
+//     if (!name || !email || !password) {
+//       return res.status(400).json({ 
+//         success: false,
+//         message: 'Please provide name, email and password' 
+//       });
+//     }
+
+//     const existingUser = await User.findOne({ email });
+//     if (existingUser) {
+//       return res.status(400).json({ 
+//         success: false, 
+//         message: 'Email already registered' 
+//       });
+//     }
+
+//     const user = new User({ name, email, password });
+//     await user.save();
+
+//     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRETKEY, {
+//       expiresIn: '7d',
+//     });
+
+//     res.status(201).json({
+//       success: true,
+//       message: 'Registration successful',
+//       token,
+//       user: { 
+//         _id: user._id, 
+//         name: user.name, 
+//         email: user.email
+//       },
+//     });
+
+//   } catch (error) {
+//     console.error('Signup error:', error);
+//     res.status(500).json({ 
+//       success: false,
+//       message: 'Registration failed',
+//       error: error.message 
+//     });
+//   }
+// };
+
+// export const signin = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     if (!email || !password) {
+//       return res.status(400).json({ 
+//         success: false,
+//         message: 'Please provide email and password' 
+//       });
+//     }
+
+//     const user = await User.findOne({ email }).select('+password');
+//     if (!user) {
+//       return res.status(401).json({ 
+//         success: false,
+//         message: 'Invalid credentials' 
+//       });
+//     }
+
+//     const isMatch = await user.comparePassword(password);
+//     if (!isMatch) {
+//       return res.status(401).json({ 
+//         success: false,
+//         message: 'Invalid credentials' 
+//       });
+//     }
+
+//     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRETKEY, {
+//       expiresIn: '7d',
+//     });
+
+//     user.password = undefined;
+
+//     res.json({
+//       success: true,
+//       message: 'Login successful',
+//       token,
+//       user: { 
+//         _id: user._id, 
+//         name: user.name, 
+//         email: user.email
+//       },
+//     });
+
+//   } catch (error) {
+//     console.error('Signin error:', error);
+//     res.status(500).json({ 
+//       success: false,
+//       message: 'Login failed',
+//       error: error.message 
+//     });
+//   }
+// };
+
+// export const getUser = async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id).select('-password');
+//     res.json({ 
+//       success: true, 
+//       user 
+//     });
+//   } catch (error) {
+//     console.error('Get user error:', error);
+//     res.status(500).json({ 
+//       success: false,
+//       message: 'Failed to fetch user',
+//       error: error.message 
+//     });
+//   }
+// };

@@ -1,27 +1,27 @@
 import Todo from '../models/Todo.js';
 
-// ✅ GET ALL TODOS (Admin only or general listing)
-export const getAllTodos = async (req, res) => {
+// ✅ Public Todos - anyone can access
+// ✅ Fetch all todos (remove isPublic condition)
+// ✅ sabhi todos fetch karega
+export const getPublicTodos = async (req, res) => {
   try {
-    // Optional: Only show all todos if admin or certain role
-    const todos = await Todo.find().populate('user', 'name email');
-    res.status(200).json({ success: true, todos });
+    const allTodos = await Todo.find();
+    console.log("✅ Todos Fetched:", allTodos); // 👈 add this
+    res.json({ success: true, data: allTodos });
   } catch (err) {
-    console.error('❌ getAllTodos error:', err.message);
-    res.status(500).json({ success: false, error: 'Internal server error' });
+    console.log("❌ Error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ✅ CREATE A TODO
+
+// Create new todo
 export const createTodo = async (req, res) => {
   try {
     const { title, description, priority, dueDate } = req.body;
 
-    if (!title) {
-      return res.status(400).json({
-        success: false,
-        message: 'Title is required',
-      });
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      return res.status(400).json({ success: false, message: 'Title is required' });
     }
 
     const newTodo = new Todo({
@@ -29,134 +29,84 @@ export const createTodo = async (req, res) => {
       description: description?.trim() || '',
       priority,
       dueDate,
-      user: req.user?._id,
+      user: req.user._id
     });
 
-    await newTodo.save();
-    console.log("✅ Saved new todo:", newTodo);
+    const savedTodo = await newTodo.save();
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
-      message: 'Task created successfully',
-      todo: newTodo,
+      message: 'Todo created successfully',
+      todo: savedTodo
     });
   } catch (err) {
     console.error('❌ Create Todo Error:', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error while creating task',
-    });
+    res.status(500).json({ success: false, message: 'Server error while creating todo' });
   }
 };
 
-// ✅ GET LOGGED-IN USER’S TODOS
+// Get all todos for the logged-in user
 export const getTodos = async (req, res) => {
   try {
     const todos = await Todo.find({ user: req.user._id }).sort({ createdAt: -1 });
-    return res.status(200).json({ success: true, todos });
+    res.status(200).json({ success: true, todos });
   } catch (error) {
     console.error('❌ Get Todos Error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to get todos',
-    });
+    res.status(500).json({ success: false, message: 'Failed to get todos' });
   }
 };
 
-// ✅ GET SINGLE TODO BY ID
+// Get single todo by ID
 export const getTodoById = async (req, res) => {
   try {
     const todo = await Todo.findOne({ _id: req.params.id, user: req.user._id });
-    if (!todo) {
-      return res.status(404).json({
-        success: false,
-        message: 'Todo not found',
-      });
-    }
-    return res.status(200).json({ success: true, todo });
+    if (!todo) return res.status(404).json({ success: false, message: 'Todo not found' });
+    res.status(200).json({ success: true, todo });
   } catch (error) {
-    console.error('❌ Get Todo By ID Error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error fetching todo',
-    });
+    res.status(500).json({ success: false, message: 'Error fetching todo' });
   }
 };
 
-// ✅ UPDATE TODO
+// Update todo
 export const updateTodo = async (req, res) => {
   try {
     const { title, description, status, priority, dueDate } = req.body;
 
-    if (!title) {
-      return res.status(400).json({
-        success: false,
-        message: 'Title is required',
-      });
-    }
-
-    const updated = await Todo.findOneAndUpdate(
+    const updatedTodo = await Todo.findOneAndUpdate(
       { _id: req.params.id, user: req.user._id },
-      { title, description, status, priority, dueDate },
-      { new: true, runValidators: true }
+      {
+        title: title?.trim(),
+        description: description?.trim(),
+        status,
+        priority,
+        dueDate
+      },
+      { new: true }
     );
 
-    if (!updated) {
-      return res.status(404).json({
-        success: false,
-        message: 'Todo not found',
-      });
+    if (!updatedTodo) {
+      return res.status(404).json({ success: false, message: 'Todo not found' });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'Task updated successfully',
-      todo: updated,
-    });
+    res.status(200).json({ success: true, message: 'Todo updated successfully', todo: updatedTodo });
   } catch (error) {
     console.error('❌ Update Todo Error:', error);
-
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(val => val.message);
-      return res.status(400).json({
-        success: false,
-        message: 'Validation error',
-        errors: messages,
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to update todo',
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Failed to update todo' });
   }
 };
 
-// ✅ DELETE TODO
+// Delete todo
 export const deleteTodo = async (req, res) => {
   try {
-    const deletedTodo = await Todo.findOneAndDelete({
-      _id: req.params.id,
-      user: req.user._id,
-    });
+    const deleted = await Todo.findOneAndDelete({ _id: req.params.id, user: req.user._id });
 
-    if (!deletedTodo) {
-      return res.status(404).json({
-        success: false,
-        message: 'Todo not found',
-      });
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Todo not found' });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'Todo deleted successfully',
-    });
+    res.status(200).json({ success: true, message: 'Todo deleted successfully' });
   } catch (error) {
     console.error('❌ Delete Todo Error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to delete todo',
-    });
+    res.status(500).json({ success: false, message: 'Failed to delete todo' });
   }
 };

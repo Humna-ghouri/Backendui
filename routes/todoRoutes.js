@@ -1,7 +1,7 @@
+
 import express from 'express';
 import verifyToken from '../Middlewares/auth.js';
 import {
-  getAllTodos,
   createTodo,
   getTodos,
   getTodoById,
@@ -11,25 +11,12 @@ import {
 
 const router = express.Router();
 
-// ✅ Admin or general use — Get all todos with user info populated (if needed)
-router.get('/all', getAllTodos);
+router.use(verifyToken); // Apply auth middleware to all routes
 
-// ✅ Protect all routes below with verifyToken middleware
-router.use(verifyToken);
-
-// ✅ Create a new todo for the logged-in user
-router.post('/', createTodo);
-
-// ✅ Get all todos of the logged-in user
-router.get('/', getTodos);
-
-// ✅ Get a single todo by ID (must belong to the user)
-router.get('/:id', getTodoById);
-
-// ✅ Update a specific todo (only if it belongs to the user)
-router.put('/:id', updateTodo);
-
-// ✅ Delete a specific todo (only if it belongs to the user)
-router.delete('/:id', deleteTodo);
+router.post('/', createTodo);           // Create a new Todo
+router.get('/', getTodos);              // Get all Todos for the authenticated user
+router.get('/:id', getTodoById);        // Get single Todo by ID
+router.put('/:id', updateTodo);         // Update Todo by ID
+router.delete('/:id', deleteTodo);      // Delete Todo by ID
 
 export default router;

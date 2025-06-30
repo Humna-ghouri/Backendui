@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> ce8e5d7 (Updated backend logic or bug fixes)
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';

@@ -1,6 +1,10 @@
 import express from 'express';
 import Task from '../models/taskModel.js';
+<<<<<<< HEAD
 import verifyToken from '../Middlewares/auth.js';
+=======
+import verifyToken from '../middlewares/verifyToken.js';
+>>>>>>> ce8e5d7 (Updated backend logic or bug fixes)
 
 const router = express.Router();
 

@@ -1,20 +1,23 @@
-import express from 'express';
-import {
-  signup,
-  signin,
-  getMe,
-  verifyToken // Make sure this exists in your authController.js
-} from '../controllers/authController.js';
+// import express from 'express';
+// import { signup, signin, getUser } from '../controllers/authController.js';
+// import verifyToken from '../Middlewares/auth.js'; // ✅ updated import name
 
-import verifyTokenMiddleware from '../Middlewares/auth.js';
+// const router = express.Router();
+
+// router.post('/signup', signup);
+// router.post('/signin', signin);
+// router.get('/user', verifyToken, getUser);
+
+// export default router;
+import express from 'express';
+import { signup, signin, getUser } from '../controllers/authController.js';
+import verifyToken from '../Middlewares/auth.js';
 
 const router = express.Router();
 
-// ✅ Auth routes
-router.post('/signup', signup);
-router.post('/signin', signin);
-router.get('/me', verifyTokenMiddleware, getMe);
-router.get('/verify', verifyTokenMiddleware, verifyToken); // Optional: Token validation route
+// Make sure these match your frontend requests
+router.post('/api/auth/signup', signup);
+router.post('/api/auth/signin', signin);
+router.get('/api/auth/user', verifyToken, getUser);
 
 export default router;
-

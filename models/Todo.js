@@ -1,43 +1,37 @@
-import mongoose from 'mongoose';
+ import mongoose from 'mongoose';
 
-const todoSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: [true, 'Title is required'],
-    trim: true,
-    maxlength: [100, 'Title cannot exceed 100 characters']
-  },
-  description: {
-    type: String,
-    default: '',
-    trim: true
-  },
-  status: {
-    type: String,
-    enum: {
-      values: ['pending', 'in-progress', 'completed'],
-      message: 'Status must be pending, in-progress, or completed'
-    },
-    default: 'pending'
-  },
-  priority: {
-    type: String,
-    enum: {
-      values: ['low', 'medium', 'high'],
-      message: 'Priority must be low, medium, or high'
-    },
-    default: 'medium'
-  },
-  dueDate: {
-    type: Date
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  }
-}, {
-  timestamps: true
+// // const todSchema = new mongoose.Schema({
+// //   title: { type: String, required: true, trim: true },
+// //   description: String,
+// //   priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
+// //   dueDate: Date,
+// //   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+// //   createdAt: { type: Date, default: Date.now }
+// // });
+
+// const todSchema = new mongoose.Schema({
+//   title: { type: String, required: true, trim: true },
+//   description: String,
+//   priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
+//   dueDate: Date,
+//   user: mongoose.Schema.Types.Mixed, // 👈 temporarily mixed type
+//   createdAt: { type: Date, default: Date.now }
+// });
+
+// const Todo = mongoose.model('Todo', todSchema);
+// export default Todo;
+
+// models/Todo.js
+
+const todSchema = new mongoose.Schema({
+  title: { type: String, required: true, trim: true },
+  description: String,
+  status: { type: String, enum: ['pending', 'in-progress', 'completed'], default: 'pending' },
+  priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
+  dueDate: Date,
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now }
 });
 
-export default mongoose.model('Todo', todoSchema);
+const Todo = mongoose.model('Todo', todSchema);
+export default Todo;
