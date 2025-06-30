@@ -63,9 +63,15 @@ app.get('/api/health', (req, res) => {
 });
 
 // ✅ 404 Handler
-app.use((req, res) => {
-  console.log('❌ 404 - Not Found:', req.method, req.url);
-  res.status(404).json({ success: false, message: 'Endpoint not found' });
+app.use((req, res, next) => {
+  const origin = req.header('Origin');
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  }
+  next();
 });
 
 // ✅ MongoDB Connect
