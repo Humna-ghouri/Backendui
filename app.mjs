@@ -25,8 +25,10 @@ const corsOptions = {
     } else {
       callback(new Error('Not allowed by CORS'));
     }
-  }
-}; // ✅ Closing the object correctly with semicolon
+  },
+  credentials: true // ✅ VERY IMPORTANT
+};
+
 
 
 app.use(cors(corsOptions));
