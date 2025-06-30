@@ -16,8 +16,8 @@ import verifyToken from '../Middlewares/auth.js';
 const router = express.Router();
 
 // Make sure these match your frontend requests
-router.post('/api/auth/signup', signup);
-router.post('/api/auth/signin', signin);
-router.get('/api/auth/user', verifyToken, getUser);
+router.post('/signin', signin);
+router.post('/signup', signup);
+router.get('/user', verifyToken, getUser);
 
 export default router;
