@@ -51,7 +51,7 @@ app.use(express.urlencoded({ extended: true }));
 // ✅ Routes
 app.use('/api/auth', userRoutes);
 app.use('/api/todos', todoRoutes);
-app.use('/api/public', publicTodoRoutes); // Example: GET /api/public/todos
+app.use('/api/public', publicTodoRoutes); // ✅ THIS MUST BE ABOVE 404 HANDLER
 
 // ✅ Health Check Route
 app.get('/api/health', (req, res) => {
